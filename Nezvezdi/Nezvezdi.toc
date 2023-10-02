@@ -1,0 +1,11 @@
+## Interface: 30300
+## Title: Nezvezdi
+## Notes: Отображает созвездия/бафы для упрощение перемещения игроков в рейде по пати.
+## Author: Exboyfriend
+## Version: 1.0
+## SavedVariables: NZVD_DB
+
+libs\LoutenLib\LoutenLib.lua
+spell_icons.lua
+settings.lua
+core.lua

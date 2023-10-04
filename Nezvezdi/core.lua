@@ -1,21 +1,21 @@
 local AddOnName, Engine = ...
 LoutenLib, NZVD = unpack(Engine)
 
-LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.01")
+LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.1")
 NZVD:SetChatPrefixColor("ffff6b")
-NZVD:SetRevision("2023", "10", "02", "00", "01", "00")
+NZVD:SetRevision("2023", "10", "04", "01", "00", "00")
 NZVD:LoadedFunction(function()
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:PrintMsg("/nzvd - настройки.")
     NZVD:InitNewSettings()
     NZVD:InitIcons()
-    NZVD:SetType(NZVD_DB.Profiles[UnitName("player")].Type)
-    -- NZVD:FindConst()
+    NZVD:SetType(NZVD_DB.Profiles[UnitName("player")].Type, 0)
 end)
 
 SlashCmdList.NZVD = function(msg, editBox)
     msg = strlower(msg)
     if (#msg == 0) then
+        NZVD:GetInfoAboutUnknowsFromRaid()
         if (NZVD.SettingsWindow:IsShown()) then
             NZVD.SettingsWindow:Close()
         else
@@ -29,36 +29,56 @@ SLASH_NZVD1 = "/nzvd"
 NZVD.RaidUpdate = CreateFrame("Frame")
 NZVD.Type = 1
 NZVD.PlayersCache = {}
-NZVD.PlayerDebuffName = nil
+NZVD.UnknownPlayers = {}
 
 NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5)
     if (e == "RAID_ROSTER_UPDATE") then
-        for i = 1, GetNumRaidMembers() do
-            if (NZVD.PlayersCache[UnitName("raid"..i)]) then
-                if (not UnitIsConnected("raid"..i)) then
-                    NZVD.PlayersCache[UnitName("raid"..i)] = nil
+        NZVD:Update(0)
+    end
+    if (e == "CHAT_MSG_ADDON") then
+        if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+            if (arg1 == "nzvd_get_info_about_unknows_from_raid") then
+                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                    local names = {strsplit(" ", arg2)}
+                    
+                    for i = 1, #names do
+                        if (string.len(names[i])>0) then
+                            if (NZVD.PlayersCache[names[i]]) then
+                                SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..NZVD.PlayersCache[names[i]], "WHISPER", arg4)
+                            else
+                                for x = 1, 40 do
+                                    if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)]) then
+                                        if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)] == "ignore") then
+                                            SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." ".."ignore", "WHISPER", arg4)
+                                        else
+                                            SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..UnitDebuff("raid"..i, x), "WHISPER", arg4)
+                                        end
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                return
+            end
+    
+            if (arg1 == "nzvd_out_info_about_unknows_players") then
+                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                    if (not NZVD.PlayersCache[select(1,strsplit(" ", arg2))]) then
+                        if (select(2,strsplit(" ", arg2)) == "ignore") then
+                            NZVD:SetPlayerCache(select(1,strsplit(" ", arg2)), select(2,strsplit(" ", arg2)))
+                        else
+                            NZVD:SetPlayerCache(select(1,strsplit(" ", arg2)), select(2,strsplit(" ", arg2)).." "..select(3,strsplit(" ", arg2)))
+                        end
+                        NZVD:RemoveUnknownPlayers()
+                        NZVD:SetType(NZVD.Type, 1)
+                        return
+                    end
                 end
             end
         end
-        NZVD:SetType(NZVD.Type)
-        return
     end
-    -- if (e == "CHAT_MSG_ADDON") then
-    --     if (arg1 == "nzvd_get_unit_debuff_from_unit") then
-    --         if (NZVD:CheckPlayerInOwnRaid(arg4)) then
-    --             NZVD:SendUnitDebuffFromUnit(arg4)
-    --             return
-    --         end
-    --     end
-
-    --     if (arg1 == "nzvd_send_unit_debuff_from_unit") then
-    --         if (NZVD:CheckPlayerInOwnRaid(arg4)) then
-    --             NZVD:SetPlayerCache(arg4, arg2)
-    --             NZVD:SetType(NZVD.Type)
-    --             return
-    --         end
-    --     end
-    -- end
 end)
 
 function NZVD:InitIcons()
@@ -84,18 +104,24 @@ function NZVD:InitIcons()
         end)
     end
     NZVD.RaidUpdate:RegisterEvent("RAID_ROSTER_UPDATE")
-    -- NZVD.RaidUpdate:RegisterEvent("CHAT_MSG_ADDON")
+    NZVD.RaidUpdate:RegisterEvent("CHAT_MSG_ADDON")
 end
 
 function NZVD:SetDebuffIcons()
     for i = 1, GetNumRaidMembers() do
         _G["RaidGroupButton"..i.."NZVDIcon"]:Hide()
         if (NZVD.PlayersCache[UnitName("raid"..i)]) then
-            _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
-            _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Debuffs[NZVD.PlayersCache[UnitName("raid"..i)]].path)
-            _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Debuffs[NZVD.PlayersCache[UnitName("raid"..i)]].info)
+            if (NZVD.PlayersCache[UnitName("raid"..i)] ~= "ignore") then
+                _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
+                _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Debuffs[NZVD.PlayersCache[UnitName("raid"..i)]].path)
+                _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Debuffs[NZVD.PlayersCache[UnitName("raid"..i)]].info)
+            end
         else
             for x = 1, 40 do
+                if (NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)] == "ignore") then
+                    NZVD:SetPlayerCache(UnitName("raid"..i), "ignore")
+                    break
+                end
                 if (NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)]) then
                     _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                     _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)].path)
@@ -104,11 +130,13 @@ function NZVD:SetDebuffIcons()
                     break
                 end
             end
-            -- if (not NZVD.PlayersCache[UnitName("raid"..i)]) then
-            --     if (UnitIsConnected("raid"..i)) then
-            --         NZVD:GetUnitDebuffFromUnit(UnitName("raid"..i))
-            --     end
-            -- end
+            if (not NZVD.PlayersCache[UnitName("raid"..i)]) then
+                if (UnitIsConnected("raid"..i) and UnitName("raid"..i) ~= UnitName("player")) then
+                    if (not LoutenLib:IndexOf(NZVD.UnknownPlayers, UnitName("raid"..i))) then
+                        NZVD.UnknownPlayers[#NZVD.UnknownPlayers+1] = UnitName("raid"..i)
+                    end
+                end
+            end
         end
     end
 end
@@ -117,11 +145,17 @@ function NZVD:SetBuffIcons()
     for i = 1, GetNumRaidMembers() do
         _G["RaidGroupButton"..i.."NZVDIcon"]:Hide()
         if (NZVD.PlayersCache[UnitName("raid"..i)]) then
-            _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
-            _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].path)
-            _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].info)
+            if (NZVD.PlayersCache[UnitName("raid"..i)] ~= "ignore") then
+                _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
+                _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].path)
+                _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].info)
+            end
         else
             for x = 1, 40 do
+                if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)] == "ignore") then
+                    NZVD:SetPlayerCache(UnitName("raid"..i), "ignore")
+                    break
+                end
                 if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)]) then
                     _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                     _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)].path)
@@ -130,33 +164,34 @@ function NZVD:SetBuffIcons()
                     break
                 end
             end
-            -- if (not NZVD.PlayersCache[UnitName("raid"..i)]) then
-            --     if (UnitIsConnected("raid"..i)) then
-            --         NZVD:GetUnitDebuffFromUnit(UnitName("raid"..i))
-            --     end
-            -- end
+            if (not NZVD.PlayersCache[UnitName("raid"..i)]) then
+                if (UnitIsConnected("raid"..i) and UnitName("raid"..i) ~= UnitName("player")) then
+                    if (not LoutenLib:IndexOf(NZVD.UnknownPlayers, UnitName("raid"..i))) then
+                        NZVD.UnknownPlayers[#NZVD.UnknownPlayers+1] = UnitName("raid"..i)
+                    end
+                end
+            end
         end
     end
 end
 
-function NZVD:SetType(typeId) -- 0 - standart, 1 - aura, 2 - text
+function NZVD:SetType(typeId, mode) -- 0 - standart, 1 - aura, 2 - text || 0 - standart mode, 1 - increase accurasy mode
     if (typeId == 0) then
         NZVD:SetDebuffIcons()
     elseif (typeId == 1) then
         NZVD:SetBuffIcons()
     end
 
-    NZVD.Type = typeId
-    NZVD_DB.Profiles[UnitName("player")].Type = typeId
-end
-
-function NZVD:FindConst()
-    for i = 1, 40 do
-        if (strfind(UnitDebuff("player", i), "Созвездие")) then
-            NZVD.PlayerDebuffName = UnitDebuff("player", i)
-            return
+    if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+        if (mode == 0) then
+            if (#NZVD.UnknownPlayers > 0) then
+                NZVD:GetInfoAboutUnknowsFromRaid()
+            end
         end
     end
+
+    NZVD.Type = typeId
+    NZVD_DB.Profiles[UnitName("player")].Type = typeId
 end
 
 function NZVD:SetPlayerCache(playerName, debuff)
@@ -164,18 +199,50 @@ function NZVD:SetPlayerCache(playerName, debuff)
 end
 
 
--- function NZVD:CheckPlayerInOwnRaid(playerName)
---     for i = 1, GetNumRaidMembers() do
---         if (UnitName("raid"..i) == playerName) then
---             return true
---         end
---     end
--- end
+function NZVD:CheckPlayerInOwnRaid(playerName)
+    for i = 1, GetNumRaidMembers() do
+        if (UnitName("raid"..i) == playerName) then
+            return true
+        end
+    end
+end
 
--- function NZVD:GetUnitDebuffFromUnit(playerName)
---     SendAddonMessage("nzvd_get_unit_debuff_from_unit", "1", "WHISPER", playerName)
--- end
+function NZVD:RemoveUnknownPlayers()
+    NZVD.UnknownPlayers = LoutenLib:ClearNils(NZVD.UnknownPlayers)
+    for i = 1, #NZVD.UnknownPlayers do
+        if (NZVD.PlayersCache[NZVD.UnknownPlayers[i]]) then
+            NZVD.UnknownPlayers[i] = nil
+            if (#NZVD.UnknownPlayers>1) then
+                NZVD.UnknownPlayers = LoutenLib:ClearNils(NZVD.UnknownPlayers)
+            end
+        end
+    end
+end
 
--- function NZVD:SendUnitDebuffFromUnit(playerName)
---     SendAddonMessage("nzvd_send_unit_debuff_from_unit", NZVD.PlayerDebuffName, "WHISPER", playerName)
--- end
+function NZVD:GetInfoAboutUnknowsFromRaid()
+    local names = ""
+    for key, value in pairs(NZVD.UnknownPlayers) do
+        if (NZVD:CheckPlayerInOwnRaid(value)) then
+            names = names..value.." "
+        else
+            NZVD:RemoveUnknownPlayers()
+        end
+    end
+    SendAddonMessage("nzvd_get_info_about_unknows_from_raid", names, "RAID")
+end
+
+function NZVD:Update(mode) -- 0 - standart mode, 1 - increase accurasy mode
+    if (UnitInRaid("player")) then
+        for i = 1, GetNumRaidMembers() do
+            if (NZVD.PlayersCache[UnitName("raid"..i)]) then
+                if (not UnitIsConnected("raid"..i)) then
+                    NZVD.PlayersCache[UnitName("raid"..i)] = nil
+                end
+            end
+        end
+        NZVD:SetType(NZVD.Type, mode)
+        return
+    else
+        NZVD.PlayersCache = {}
+    end
+end

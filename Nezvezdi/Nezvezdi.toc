@@ -2,7 +2,7 @@
 ## Title: Nezvezdi
 ## Notes: Отображает созвездия/бафы для упрощение перемещения игроков в рейде по пати.
 ## Author: Exboyfriend
-## Version: 1.01
+## Version: 1.1
 ## SavedVariables: NZVD_DB
 
 libs\LoutenLib\LoutenLib.lua

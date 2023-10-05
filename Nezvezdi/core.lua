@@ -4,9 +4,9 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.1")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.2.1")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2023", "10", "05", "01", "00", "00")
+    NZVD:SetRevision("2023", "10", "05", "01", "01", "00")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:InitNewSettings()
     NZVD:InitIcons()
@@ -106,23 +106,23 @@ end)
 function NZVD:InitIcons()
     for i = 1, 40 do
         _G["RaidGroupButton"..i.."NZVDIcon"] = LoutenLib:CreateNewFrame(_G["RaidGroupButton"..i])
-        local icon = _G["RaidGroupButton"..i.."NZVDIcon"]
-        icon:InitNewFrame(_G["RaidGroupButton"..i]:GetHeight(), _G["RaidGroupButton"..i]:GetHeight() * 1.05,
+        _G["RaidGroupButton"..i.."NZVDIcon"]:InitNewFrame(_G["RaidGroupButton"..i]:GetHeight(), _G["RaidGroupButton"..i]:GetHeight() * 1.05,
                             "RIGHT", _G["RaidGroupButton"..i], "RIGHT", NZVD_DB.Profiles[UnitName("player")].IconXPos ,0,
                             1,0,0,1, true)
-        icon.Tooltip = LoutenLib:CreateNewFrame(icon)
-        icon.Tooltip:InitNewFrame(300, _G["RaidGroupButton"..i]:GetHeight(),
-                                    "BOTTOMLEFT", icon, "TOPRIGHT", 0,0,
+        _G["RaidGroupButton"..i.."NZVDIcon"]:SetFrameStrata("HIGH")
+        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip = LoutenLib:CreateNewFrame(_G["RaidGroupButton"..i.."NZVDIcon"])
+        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:InitNewFrame(300, _G["RaidGroupButton"..i]:GetHeight(),
+                                    "BOTTOMLEFT", _G["RaidGroupButton"..i.."NZVDIcon"], "TOPRIGHT", 0,0,
                                     0,0,0,1)
-        icon.Tooltip:SetTextToFrame("CENTER", icon.Tooltip, "CENTER", 0,0, true, 9, "")
-        icon.Tooltip:TextureToBackdrop(true, 1, 1, 1,.9,0,1, 0,0,0,.735)
-        icon.Tooltip:SetFrameStrata("TOOLTIP")
-        icon.Tooltip:Hide()
-        icon:SetScript("OnEnter", function()
-            icon.Tooltip:Show()
+        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetTextToFrame("CENTER", _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip, "CENTER", 0,0, true, 9, "")
+        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:TextureToBackdrop(true, 1, 1, 1,.9,0,1, 0,0,0,.735)
+        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetFrameStrata("TOOLTIP")
+        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:Hide()
+        _G["RaidGroupButton"..i.."NZVDIcon"]:SetScript("OnEnter", function()
+            _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:Show()
         end)
-        icon:SetScript("OnLeave", function()
-            icon.Tooltip:Hide()
+        _G["RaidGroupButton"..i.."NZVDIcon"]:SetScript("OnLeave", function()
+            _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:Hide()
         end)
     end
     NZVD.RaidUpdate:RegisterEvent("RAID_ROSTER_UPDATE")

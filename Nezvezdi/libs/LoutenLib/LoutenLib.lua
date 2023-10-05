@@ -867,18 +867,21 @@ Engine[1].InitAddon = function(s, fileName, name, version)
     ------------------
     -- Addon Loaded --
     Engine[2].LoadedFunction = function(self, func)
+        print("")
+        Engine[2]:PrintMsg("Аддон загружен: v"..Engine[2].Info.Version, "a9ffa6")
         Engine[2].LoadedFunc = func
+        Engine[2].LoadedFunc()
     end
     Engine[2].LoadedFunc = nil
-    Engine[2].Loaded = CreateFrame("Frame")
-    Engine[2].Loaded:RegisterEvent("ADDON_LOADED")
-    Engine[2].Loaded:SetScript("OnEvent", function(s, event, addOnName)
-        if (addOnName == Engine[2].Info.FileName) then
-            print("")
-            Engine[2]:PrintMsg("Аддон загружен: v"..Engine[2].Info.Version, "a9ffa6")
-            if (Engine[2].LoadedFunction) then Engine[2].LoadedFunc() end
-        end
-    end)
+    -- Engine[2].Loaded = CreateFrame("Frame")
+    -- Engine[2].Loaded:RegisterEvent("PLAYER_LOGIN")
+    -- Engine[2].Loaded:SetScript("OnEvent", function(s, event, addOnName)
+        -- if (addOnName == Engine[2].Info.FileName) then
+        --     print("")
+        --     Engine[2]:PrintMsg("Аддон загружен: v"..Engine[2].Info.Version, "a9ffa6")
+        --     if (Engine[2].LoadedFunction) then Engine[2].LoadedFunc() end
+        -- end
+    -- end)
     -- Addon Loaded --
     ------------------
 

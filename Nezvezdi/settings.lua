@@ -124,6 +124,7 @@ function NZVD:InitNewSettings()
                                                                             NZVD_DB.Profiles[UnitName("player")].SetOldVersion = not NZVD_DB.Profiles[UnitName("player")].SetOldVersion
                                                                             NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].SetOldVersion)
                                                                             if (NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+                                                                                NZVD:Notify("Вы включили функцию отката, напишите\n /reload чтоб она заработала.")
                                                                                 NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy = false
                                                                                 NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy)
                                                                                 NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2.CheckButton:Disable()

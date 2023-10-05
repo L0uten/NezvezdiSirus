@@ -4,9 +4,9 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.2.1")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.2.2")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2023", "10", "05", "01", "01", "00")
+    NZVD:SetRevision("2023", "10", "05", "01", "02", "00")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:InitNewSettings()
     NZVD:InitIcons()
@@ -42,65 +42,69 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
     if (e == "RAID_ROSTER_UPDATE") then
         NZVD:Update(0)
     end
-    if (e == "CHAT_MSG_ADDON") then
-        if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
-            -- GET
-            if (arg1 == "nzvd_get_info_about_unknows_from_raid") then
-                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
-                    local names = {strsplit(" ", arg2)}
-                    
-                    for i = 1, #names do
-                        if (string.len(names[i])>0) then
-                            if (NZVD.PlayersCache[names[i]]) then
-                                SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..NZVD.PlayersCache[names[i]], "WHISPER", arg4)
-                            else
-                                for x = 1, 40 do
-                                    if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)]) then
-                                        if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)] == "ignore") then
-                                            SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." ".."ignore", "WHISPER", arg4)
-                                        else
-                                            SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..UnitDebuff("raid"..i, x), "WHISPER", arg4)
+        if (e == "CHAT_MSG_ADDON") then
+            if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+                -- GET
+                if (arg1 == "nzvd_get_info_about_unknows_from_raid") then
+                    if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                        local names = {strsplit(" ", arg2)}
+                        
+                        for i = 1, #names do
+                            if (string.len(names[i])>0) then
+                                if (NZVD.PlayersCache[names[i]]) then
+                                    SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..NZVD.PlayersCache[names[i]], "WHISPER", arg4)
+                                else
+                                    for y = 1, GetNumRaidMembers() do
+                                        if (UnitName("raid"..y) == names[i]) then
+                                            for x = 1, 40 do
+                                                if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..y, x)]) then
+                                                    if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..y, x)] == "ignore") then
+                                                        SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." ".."ignore", "WHISPER", arg4)
+                                                    else
+                                                        SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..UnitDebuff("raid"..y, x), "WHISPER", arg4)
+                                                    end
+                                                    break
+                                                end
+                                            end
                                         end
-                                        break
                                     end
                                 end
                             end
                         end
                     end
+                    return
                 end
-                return
-            end
-
-            if (arg1 == "nzvd_get_info_about_players_with_addon") then
-                if (arg4 == "Exboyfriend") then
-                    SendAddonMessage("nzvd_out_info_about_player_with_addon", UnitName("player").." - v"..NZVD.Info.Version, "WHISPER", arg4)
-                end
-                return
-            end
-            
-            -- OUT
-            if (arg1 == "nzvd_out_info_about_unknows_players") then
-                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
-                    if (not NZVD.PlayersCache[select(1,strsplit(" ", arg2))]) then
-                        if (select(2,strsplit(" ", arg2)) == "ignore") then
-                            NZVD:SetPlayerCache(select(1,strsplit(" ", arg2)), select(2,strsplit(" ", arg2)))
-                        else
-                            NZVD:SetPlayerCache(select(1,strsplit(" ", arg2)), select(2,strsplit(" ", arg2)).." "..select(3,strsplit(" ", arg2)))
-                        end
-                        NZVD:RemoveUnknownPlayers()
-                        NZVD:SetType(NZVD.Type, 1)
+    
+                if (arg1 == "nzvd_get_info_about_players_with_addon") then
+                    if (arg4 == "Exboyfriend") then
+                        SendAddonMessage("nzvd_out_info_about_player_with_addon", UnitName("player").." - v"..NZVD.Info.Version, "WHISPER", arg4)
                     end
+                    return
                 end
-                return
-            end
-
-            if (arg1 == "nzvd_out_info_about_player_with_addon") then
-                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
-                    NZVD:PrintMsg(arg2)
+                
+                -- OUT
+                if (arg1 == "nzvd_out_info_about_unknows_players") then
+                    if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                        if (not NZVD.PlayersCache[select(1,strsplit(" ", arg2))]) then
+                            if (select(2,strsplit(" ", arg2)) == "ignore") then
+                                NZVD:SetPlayerCache(select(1,strsplit(" ", arg2)), select(2,strsplit(" ", arg2)))
+                            else
+                                NZVD:SetPlayerCache(select(1,strsplit(" ", arg2)), select(2,strsplit(" ", arg2)).." "..select(3,strsplit(" ", arg2)))
+                            end
+                            NZVD:RemoveUnknownPlayers()
+                            NZVD:SetType(NZVD.Type, 1)
+                        end
+                    end
+                    return
+                end
+    
+                if (arg1 == "nzvd_out_info_about_player_with_addon") then
+                    if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                        NZVD:PrintMsg(arg2)
+                    end
                 end
             end
         end
-    end
 end)
 
 function NZVD:InitIcons()

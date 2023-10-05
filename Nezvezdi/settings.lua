@@ -1,5 +1,5 @@
 local AddOnName, Engine = ...
-LoutenLib, NZVD = unpack(Engine)
+local LoutenLib, NZVD = unpack(Engine)
 
 function NZVD:InitNewSettings()
     NZVD.SettingsWindow.MenuBar:AddNewBarButton("Внешний вид")
@@ -31,6 +31,83 @@ function NZVD:InitNewSettings()
                                                                     NZVD:SetType(1)
                                                                     NZVD.SettingsWindow.MainPanel.Windows[wi1].Type.DropDownList:Close()
                                                                 end})
+
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].Info2 = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi1])
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].Info2:InitNewFrame(1,1,
+                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].Type, "TOPLEFT", 0, -50,
+                                                                1,0,0,0)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].Info2:SetTextToFrame("LEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].Info2, "LEFT", 0,0, false, 14, "Вы можете переместить иконки по горизонтали:")
+                                                            
+    NZVD_DB.Profiles[UnitName("player")].IconXPos = NZVD_DB.Profiles[UnitName("player")].IconXPos or -10
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi1])
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT:InitNewFrame2(20,20,
+                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].Info2, "TOPLEFT", 0, -20,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                1, true)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT:InitNewButton2(NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                            1,
+                                                                            function()
+                                                                                local oldX = 0
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT:SetScript("OnUpdate", function()
+                                                                                    if (NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT.IsPressed) then
+                                                                                        for i = 1, 10, 1 do
+                                                                                            oldX = select(4, _G["RaidGroupButton"..i.."NZVDIcon"]:GetPoint())
+                                                                                            if (oldX-1 >= -145) then
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:ClearAllPoints()
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:SetPoint("RIGHT", _G["RaidGroupButton"..i], "RIGHT", oldX - 1 ,0)
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end)
+                                                                            end,
+                                                                            function()
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT:SetScript("OnUpdate", nil)
+                                                                                NZVD_DB.Profiles[UnitName("player")].IconXPos = select(4, _G["RaidGroupButton1NZVDIcon"]:GetPoint())
+                                                                            end)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT:SetTextToFrame("CENTER", NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT, "CENTER", 0,0, true, 13, "<")
+
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi1])
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT:InitNewFrame2(20,20,
+                                                                "LEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT, "RIGHT", 20, 0,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                1, true)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT:InitNewButton2(NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                            1,
+                                                                            function()
+                                                                                local oldX = 0
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT:SetScript("OnUpdate", function()
+                                                                                    if (NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT.IsPressed) then
+                                                                                        for i = 1, 10, 1 do
+                                                                                            oldX = select(4, _G["RaidGroupButton"..i.."NZVDIcon"]:GetPoint())
+                                                                                            if (oldX+1 <= 5) then
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:ClearAllPoints()
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:SetPoint("RIGHT", _G["RaidGroupButton"..i], "RIGHT", oldX + 1 ,0)
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end)
+                                                                            end,
+                                                                            function()
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT:SetScript("OnUpdate", nil)
+                                                                                NZVD_DB.Profiles[UnitName("player")].IconXPos = select(4, _G["RaidGroupButton1NZVDIcon"]:GetPoint())
+                                                                            end)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT:SetTextToFrame("CENTER", NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT, "CENTER", 0,0, true, 13, ">")
+
+
+
+
+
+
+
+
 
     NZVD.SettingsWindow.MenuBar:AddNewBarButton("Производительность")
 

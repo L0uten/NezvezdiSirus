@@ -1,26 +1,33 @@
 local AddOnName, Engine = ...
-LoutenLib, NZVD = unpack(Engine)
+local LoutenLib, NZVD = unpack(Engine)
 
-LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.1")
-NZVD:SetChatPrefixColor("ffff6b")
-NZVD:SetRevision("2023", "10", "04", "01", "00", "00")
-NZVD:LoadedFunction(function()
+local Init = CreateFrame("Frame")
+Init:RegisterEvent("PLAYER_LOGIN")
+Init:SetScript("OnEvent", function()
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.1")
+    NZVD:SetChatPrefixColor("ffff6b")
+    NZVD:SetRevision("2023", "10", "05", "01", "00", "00")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
-    NZVD:PrintMsg("/nzvd - настройки.")
     NZVD:InitNewSettings()
     NZVD:InitIcons()
     NZVD:SetType(NZVD_DB.Profiles[UnitName("player")].Type, 0)
+    NZVD:LoadedFunction(function()
+        NZVD:PrintMsg("/nzvd - настройки.")
+    end)
 end)
 
 SlashCmdList.NZVD = function(msg, editBox)
     msg = strlower(msg)
     if (#msg == 0) then
-        NZVD:GetInfoAboutUnknowsFromRaid()
         if (NZVD.SettingsWindow:IsShown()) then
             NZVD.SettingsWindow:Close()
         else
             NZVD.SettingsWindow:Open()
         end
+    end
+
+    if (msg == "dev") then
+        NZVD:GetInfoAboutPlayersWithAddon()
     end
 end
 
@@ -37,6 +44,7 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
     end
     if (e == "CHAT_MSG_ADDON") then
         if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+            -- GET
             if (arg1 == "nzvd_get_info_about_unknows_from_raid") then
                 if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
                     local names = {strsplit(" ", arg2)}
@@ -62,7 +70,15 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
                 end
                 return
             end
-    
+
+            if (arg1 == "nzvd_get_info_about_players_with_addon") then
+                if (arg4 == "Exboyfriend") then
+                    SendAddonMessage("nzvd_out_info_about_player_with_addon", UnitName("player").." - v"..NZVD.Info.Version, "WHISPER", arg4)
+                end
+                return
+            end
+            
+            -- OUT
             if (arg1 == "nzvd_out_info_about_unknows_players") then
                 if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
                     if (not NZVD.PlayersCache[select(1,strsplit(" ", arg2))]) then
@@ -73,8 +89,14 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
                         end
                         NZVD:RemoveUnknownPlayers()
                         NZVD:SetType(NZVD.Type, 1)
-                        return
                     end
+                end
+                return
+            end
+
+            if (arg1 == "nzvd_out_info_about_player_with_addon") then
+                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                    NZVD:PrintMsg(arg2)
                 end
             end
         end
@@ -86,7 +108,7 @@ function NZVD:InitIcons()
         _G["RaidGroupButton"..i.."NZVDIcon"] = LoutenLib:CreateNewFrame(_G["RaidGroupButton"..i])
         local icon = _G["RaidGroupButton"..i.."NZVDIcon"]
         icon:InitNewFrame(_G["RaidGroupButton"..i]:GetHeight(), _G["RaidGroupButton"..i]:GetHeight() * 1.05,
-                            "RIGHT", _G["RaidGroupButton"..i], "RIGHT", -10 ,0,
+                            "RIGHT", _G["RaidGroupButton"..i], "RIGHT", NZVD_DB.Profiles[UnitName("player")].IconXPos ,0,
                             1,0,0,1, true)
         icon.Tooltip = LoutenLib:CreateNewFrame(icon)
         icon.Tooltip:InitNewFrame(300, _G["RaidGroupButton"..i]:GetHeight(),
@@ -244,5 +266,10 @@ function NZVD:Update(mode) -- 0 - standart mode, 1 - increase accurasy mode
         return
     else
         NZVD.PlayersCache = {}
+        NZVD.UnknownPlayers = {}
     end
+end
+
+function NZVD:GetInfoAboutPlayersWithAddon()
+    SendAddonMessage("nzvd_get_info_about_players_with_addon", "1", "RAID")
 end

@@ -7,7 +7,7 @@ function NZVD:InitNewSettings()
     local wi1 = NZVD.SettingsWindow:GetIndexByText("Внешний вид")
     NZVD.SettingsWindow.MainPanel.Windows[wi1].Info1 = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi1])
     NZVD.SettingsWindow.MainPanel.Windows[wi1].Info1:InitNewFrame(1,1,
-                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1], "TOPLEFT", 35, -30,
+                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1], "TOPLEFT", 35, -20-(NZVD.SettingsWindow.MainPanel.Windows[wi1].Title:GetHeight()),
                                                                 1,0,0,0)
     NZVD.SettingsWindow.MainPanel.Windows[wi1].Info1:SetTextToFrame("LEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].Info1, "LEFT", 0,0, false, 14, "Вы можете выбрать отображение иконок:")
 
@@ -54,7 +54,7 @@ function NZVD:InitNewSettings()
                                                                                 local oldX = 0
                                                                                 NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT:SetScript("OnUpdate", function()
                                                                                     if (NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT.IsPressed) then
-                                                                                        for i = 1, 10, 1 do
+                                                                                        for i = 1, 40 do
                                                                                             oldX = select(4, _G["RaidGroupButton"..i.."NZVDIcon"]:GetPoint())
                                                                                             if (oldX-1 >= -145) then
                                                                                                 _G["RaidGroupButton"..i.."NZVDIcon"]:ClearAllPoints()
@@ -85,7 +85,7 @@ function NZVD:InitNewSettings()
                                                                                 local oldX = 0
                                                                                 NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT:SetScript("OnUpdate", function()
                                                                                     if (NZVD.SettingsWindow.MainPanel.Windows[wi1].SetRightPosBT.IsPressed) then
-                                                                                        for i = 1, 10, 1 do
+                                                                                        for i = 1, 40 do
                                                                                             oldX = select(4, _G["RaidGroupButton"..i.."NZVDIcon"]:GetPoint())
                                                                                             if (oldX+1 <= 5) then
                                                                                                 _G["RaidGroupButton"..i.."NZVDIcon"]:ClearAllPoints()
@@ -105,6 +105,73 @@ function NZVD:InitNewSettings()
 
 
 
+    NZVD_DB.Profiles[UnitName("player")].IconSize = NZVD_DB.Profiles[UnitName("player")].IconSize or _G["RaidGroupButton1"]:GetHeight()
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].Info3 = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi1])
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].Info3:InitNewFrame(1,1,
+                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].SetLeftPosBT, "TOPLEFT", 0, -50,
+                                                                1,0,0,0)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].Info3:SetTextToFrame("LEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].Info3, "LEFT", 0,0, false, 14, "Вы можете изменить размер иконок:")
+
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi1])
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize:InitNewFrame2(20,20,
+                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].Info3, "TOPLEFT", 0, -20,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                1, true)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize:InitNewButton2(NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                            1,
+                                                                            function()
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize:SetScript("OnUpdate", function()
+                                                                                    if (NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize.IsPressed) then
+                                                                                        for i = 1, 40 do
+                                                                                            if (_G["RaidGroupButton"..i.."NZVDIcon"]:GetWidth()-1 >= 12) then
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:SetWidth(_G["RaidGroupButton"..i.."NZVDIcon"]:GetWidth()-1)
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:SetHeight(_G["RaidGroupButton"..i.."NZVDIcon"]:GetHeight()-1)
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end)
+                                                                            end,
+                                                                            function()
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize:SetScript("OnUpdate", nil)
+                                                                                NZVD_DB.Profiles[UnitName("player")].IconSize = _G["RaidGroupButton1NZVDIcon"]:GetHeight()
+                                                                            end)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize:SetTextToFrame("CENTER", NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize, "CENTER", 0,0, true, 13, "-")
+
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi1])
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize:InitNewFrame2(20,20,
+                                                                "LEFT", NZVD.SettingsWindow.MainPanel.Windows[wi1].MinusSize, "RIGHT", 20, 0,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                1, true)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize:InitNewButton2(NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].red,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].green,
+                                                                            NZVD.SettingsWindow.WindowStylesInRGB[NZVD.SettingsWindow:GetStyle()].blue,
+                                                                            1,
+                                                                            function()
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize:SetScript("OnUpdate", function()
+                                                                                    if (NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize.IsPressed) then
+                                                                                        for i = 1, 40 do
+                                                                                            if (_G["RaidGroupButton"..i.."NZVDIcon"]:GetWidth()+1 <= 21) then
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:SetWidth(_G["RaidGroupButton"..i.."NZVDIcon"]:GetWidth()+1)
+                                                                                                _G["RaidGroupButton"..i.."NZVDIcon"]:SetHeight(_G["RaidGroupButton"..i.."NZVDIcon"]:GetHeight()+1)
+                                                                                            end
+                                                                                        end
+                                                                                    end
+                                                                                end)
+                                                                            end,
+                                                                            function()
+                                                                                NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize:SetScript("OnUpdate", nil)
+                                                                                NZVD_DB.Profiles[UnitName("player")].IconSize = _G["RaidGroupButton1NZVDIcon"]:GetHeight()
+                                                                            end)
+    NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize:SetTextToFrame("CENTER", NZVD.SettingsWindow.MainPanel.Windows[wi1].PlusSize, "CENTER", 0,0, true, 13, "+")
+
+
+
 
 
 
@@ -117,9 +184,9 @@ function NZVD:InitNewSettings()
     end
     NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1 = LoutenLib:CreateNewFrame(NZVD.SettingsWindow.MainPanel.Windows[wi2])
     NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1:InitNewFrame(1,1,
-                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi2], "TOPLEFT", 35, -30,
+                                                                "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi2], "TOPLEFT", 35, -20-(NZVD.SettingsWindow.MainPanel.Windows[wi1].Title:GetHeight()),
                                                                 1,0,0,0)
-    NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1:InitNewCheckButton(30, NZVD_DB.Profiles[UnitName("player")].SetOldVersion, "\"Откатить\" аддон до старой версии (отключаются некоторые новые функции)", true, 10,
+    NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1:InitNewCheckButton(30, NZVD_DB.Profiles[UnitName("player")].SetOldVersion, "Безопасный режим (отключаются новые функции - убираются баги)", true, 10,
                                                                         function()
                                                                             NZVD_DB.Profiles[UnitName("player")].SetOldVersion = not NZVD_DB.Profiles[UnitName("player")].SetOldVersion
                                                                             NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].SetOldVersion)

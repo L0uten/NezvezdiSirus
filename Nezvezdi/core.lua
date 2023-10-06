@@ -4,9 +4,9 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.2.2")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.2.3")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2023", "10", "05", "01", "02", "00")
+    NZVD:SetRevision("2023", "10", "06", "00", "00", "01")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:InitNewSettings()
     NZVD:InitIcons()
@@ -110,7 +110,7 @@ end)
 function NZVD:InitIcons()
     for i = 1, 40 do
         _G["RaidGroupButton"..i.."NZVDIcon"] = LoutenLib:CreateNewFrame(_G["RaidGroupButton"..i])
-        _G["RaidGroupButton"..i.."NZVDIcon"]:InitNewFrame(_G["RaidGroupButton"..i]:GetHeight(), _G["RaidGroupButton"..i]:GetHeight() * 1.05,
+        _G["RaidGroupButton"..i.."NZVDIcon"]:InitNewFrame(NZVD_DB.Profiles[UnitName("player")].IconSize, NZVD_DB.Profiles[UnitName("player")].IconSize,
                             "RIGHT", _G["RaidGroupButton"..i], "RIGHT", NZVD_DB.Profiles[UnitName("player")].IconXPos ,0,
                             1,0,0,1, true)
         _G["RaidGroupButton"..i.."NZVDIcon"]:SetFrameStrata("HIGH")

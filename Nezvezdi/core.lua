@@ -4,15 +4,18 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.2.3")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.3")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2023", "10", "06", "00", "00", "01")
+    NZVD:SetRevision("2023", "10", "15", "01", "00", "00")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:InitNewSettings()
     NZVD:InitIcons()
     NZVD:SetType(NZVD_DB.Profiles[UnitName("player")].Type, 0)
+    NZVD:SetIncreaseAccurasy()
+    NZVD:InitNumberAuras()
+    NZVD:UpdateNumberAuras()
     NZVD:LoadedFunction(function()
-        NZVD:PrintMsg("/nzvd - настройки.")
+        NZVD:PrintMsg("/nezvezdi или /nzvd - настройки.")
     end)
 end)
 
@@ -32,11 +35,13 @@ SlashCmdList.NZVD = function(msg, editBox)
 end
 
 SLASH_NZVD1 = "/nzvd"
+SLASH_NZVD2 = "/nezvezdi"
 
 NZVD.RaidUpdate = CreateFrame("Frame")
 NZVD.Type = 1
 NZVD.PlayersCache = {}
 NZVD.UnknownPlayers = {}
+NZVD.NumberAuras = nil
 
 NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5)
     if (e == "RAID_ROSTER_UPDATE") then
@@ -107,6 +112,8 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
         end
 end)
 
+------------------------
+-- Standart functions --
 function NZVD:InitIcons()
     for i = 1, 40 do
         _G["RaidGroupButton"..i.."NZVDIcon"] = LoutenLib:CreateNewFrame(_G["RaidGroupButton"..i])
@@ -115,7 +122,7 @@ function NZVD:InitIcons()
                             1,0,0,1, true)
         _G["RaidGroupButton"..i.."NZVDIcon"]:SetFrameStrata("HIGH")
         _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip = LoutenLib:CreateNewFrame(_G["RaidGroupButton"..i.."NZVDIcon"])
-        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:InitNewFrame(300, _G["RaidGroupButton"..i]:GetHeight(),
+        _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:InitNewFrame(310, _G["RaidGroupButton"..i]:GetHeight(),
                                     "BOTTOMLEFT", _G["RaidGroupButton"..i.."NZVDIcon"], "TOPRIGHT", 0,0,
                                     0,0,0,1)
         _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetTextToFrame("CENTER", _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip, "CENTER", 0,0, true, 9, "")
@@ -141,6 +148,8 @@ function NZVD:SetDebuffIcons()
                 _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                 _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Debuffs[NZVD.PlayersCache[UnitName("raid"..i)]].path)
                 _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Debuffs[NZVD.PlayersCache[UnitName("raid"..i)]].info)
+                _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetWidth(NZVD:GetTooltipWidth(NZVD.AuraPath.Debuffs[NZVD.PlayersCache[UnitName("raid"..i)]].info))
+
             end
         else
             for x = 1, 40 do
@@ -152,6 +161,7 @@ function NZVD:SetDebuffIcons()
                     _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                     _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)].path)
                     _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)].info)
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetWidth(NZVD:GetTooltipWidth(NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)].info))
                     NZVD:SetPlayerCache(UnitName("raid"..i), UnitDebuff("raid"..i, x))
                     break
                 end
@@ -175,6 +185,7 @@ function NZVD:SetBuffIcons()
                 _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                 _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].path)
                 _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].info)
+                _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetWidth(NZVD:GetTooltipWidth(NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].info))
             end
         else
             for x = 1, 40 do
@@ -186,6 +197,7 @@ function NZVD:SetBuffIcons()
                     _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                     _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)].path)
                     _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)].info)
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetWidth(NZVD:GetTooltipWidth(NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)].info))
                     NZVD:SetPlayerCache(UnitName("raid"..i), UnitDebuff("raid"..i, x))
                     break
                 end
@@ -220,17 +232,28 @@ function NZVD:SetType(typeId, mode) -- 0 - standart, 1 - aura, 2 - text || 0 - s
     NZVD_DB.Profiles[UnitName("player")].Type = typeId
 end
 
-function NZVD:SetPlayerCache(playerName, debuff)
-    NZVD.PlayersCache[playerName] = debuff
+function NZVD:Update(mode) -- 0 - standart mode, 1 - increase accurasy mode
+    if (UnitInRaid("player")) then
+        for i = 1, GetNumRaidMembers() do
+            if (NZVD.PlayersCache[UnitName("raid"..i)]) then
+                if (not UnitIsConnected("raid"..i)) then
+                    NZVD.PlayersCache[UnitName("raid"..i)] = nil
+                end
+            end
+        end
+        NZVD:SetType(NZVD.Type, mode)
+        NZVD:UpdateNumberAuras()
+        return
+    else
+        NZVD.PlayersCache = {}
+        NZVD.UnknownPlayers = {}
+    end
 end
 
-
-function NZVD:CheckPlayerInOwnRaid(playerName)
-    for i = 1, GetNumRaidMembers() do
-        if (UnitName("raid"..i) == playerName) then
-            return true
-        end
-    end
+-----------------
+-- Icons cache --
+function NZVD:SetPlayerCache(playerName, debuff)
+    NZVD.PlayersCache[playerName] = debuff
 end
 
 function NZVD:RemoveUnknownPlayers()
@@ -257,23 +280,138 @@ function NZVD:GetInfoAboutUnknowsFromRaid()
     SendAddonMessage("nzvd_get_info_about_unknows_from_raid", names, "RAID")
 end
 
-function NZVD:Update(mode) -- 0 - standart mode, 1 - increase accurasy mode
-    if (UnitInRaid("player")) then
-        for i = 1, GetNumRaidMembers() do
-            if (NZVD.PlayersCache[UnitName("raid"..i)]) then
-                if (not UnitIsConnected("raid"..i)) then
-                    NZVD.PlayersCache[UnitName("raid"..i)] = nil
-                end
+function NZVD:GetInfoAboutPlayersWithAddon()
+    SendAddonMessage("nzvd_get_info_about_players_with_addon", "1", "RAID")
+end
+
+-----------------
+-- Performance -- 
+function NZVD:SetIncreaseAccurasy()
+    if (NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy) then
+        local stime = GetTime()
+        NZVD.RaidUpdate:SetScript("OnUpdate", function()
+            if (GetTime() >= stime+8 and not UnitAffectingCombat("player")) then
+                NZVD:Update(1)
+                stime = GetTime()
             end
-        end
-        NZVD:SetType(NZVD.Type, mode)
-        return
+        end)
     else
-        NZVD.PlayersCache = {}
-        NZVD.UnknownPlayers = {}
+        NZVD.RaidUpdate:SetScript("OnUpdate", nil)
     end
 end
 
-function NZVD:GetInfoAboutPlayersWithAddon()
-    SendAddonMessage("nzvd_get_info_about_players_with_addon", "1", "RAID")
+------------------
+-- Number Auras --
+function NZVD:InitNumberAuras()
+    if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+        local i = 0
+        NZVD.NumberAuras = {}
+        for key, value in pairs(NZVD.AuraPath.Buffs) do
+            if (value ~= "ignore") then
+                i = i + 1
+    
+                NZVD.NumberAuras[key] = LoutenLib:CreateNewFrame(FriendsFrame)
+                NZVD.NumberAuras[key]:InitNewFrame(20, 20,
+                                                "BOTTOM", FriendsFrame, "TOPLEFT", i*21,0,
+                                                1,1,1,1, true)
+                NZVD.NumberAuras[key].Texture:SetTexture(value.path)
+                NZVD.NumberAuras[key]:SetFrameStrata("HIGH")
+                NZVD.NumberAuras[key].Texture:SetDesaturated(1)
+                NZVD.NumberAuras[key]:SetTextToFrame("CENTER", NZVD.NumberAuras[key], "CENTER", 4, -4, true, 10, 0)
+    
+                NZVD.NumberAuras[key].Tooltip = LoutenLib:CreateNewFrame(NZVD.NumberAuras[key])
+    
+                NZVD.NumberAuras[key].Tooltip:InitNewFrame(NZVD:GetTooltipWidth(value.info), _G["RaidGroupButton"..i]:GetHeight(),
+                                            "BOTTOMLEFT",  NZVD.NumberAuras[key], "TOPRIGHT", 0,0,
+                                            0,0,0,1)
+                NZVD.NumberAuras[key].Tooltip:SetTextToFrame("CENTER", NZVD.NumberAuras[key].Tooltip, "CENTER", 0,0, true, 10, value.info)
+                NZVD.NumberAuras[key].Tooltip:TextureToBackdrop(true, 1, 1, 1,.9,0,1, 0,0,0,.735)
+                NZVD.NumberAuras[key].Tooltip:SetFrameStrata("TOOLTIP")
+                NZVD.NumberAuras[key].Tooltip:Hide()
+                NZVD.NumberAuras[key]:SetScript("OnEnter", function()
+                    NZVD.NumberAuras[key].Tooltip:Show()
+                end)
+                NZVD.NumberAuras[key]:SetScript("OnLeave", function()
+                    NZVD.NumberAuras[key].Tooltip:Hide()
+                end)
+                NZVD.NumberAuras[key]:Hide()
+            end
+        end
+        local raidframeonshowfunc = RaidFrame:GetScript("OnShow")
+        local raidframeonhidefunc = RaidFrame:GetScript("OnHide")
+    
+        RaidFrame:SetScript("OnShow", function()
+            if (UnitInRaid("player")) then
+                NZVD:ShowNumberAuras()
+            end
+            raidframeonshowfunc()
+        end)
+        RaidFrame:SetScript("OnHide", function()
+            NZVD:HideNumberAuras()
+            raidframeonhidefunc()
+        end)
+    end
+end
+
+function NZVD:HideNumberAuras()
+    for key, _ in pairs(NZVD.NumberAuras) do
+        NZVD.NumberAuras[key]:Hide()
+    end
+end
+
+function NZVD:ShowNumberAuras()
+    if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+        for key, _ in pairs(NZVD.NumberAuras) do
+            NZVD.NumberAuras[key]:Show()
+        end
+    end
+end
+
+function NZVD:UpdateNumberAuras()
+    if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+        if (UnitInRaid("player")) then
+            for key, _ in pairs(NZVD.NumberAuras) do
+                NZVD.NumberAuras[key].Text:SetText(0)
+                NZVD.NumberAuras[key].Texture:SetDesaturated(1)
+            end
+        
+            for i = 1, GetNumRaidMembers() do
+                for key, _ in pairs(NZVD.NumberAuras) do
+                    if (NZVD.PlayersCache[UnitName("raid"..i)] and NZVD.PlayersCache[UnitName("raid"..i)] ~= "ignore") then
+                        if (NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].path) then
+                            if (NZVD.NumberAuras[key].Texture:GetTexture() == NZVD.AuraPath.Buffs[NZVD.PlayersCache[UnitName("raid"..i)]].path) then
+                                NZVD.NumberAuras[key].Text:SetText(tonumber(NZVD.NumberAuras[key].Text:GetText())+1)
+                                NZVD.NumberAuras[key].Texture:SetDesaturated(0)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+---------------------
+-- Other functions --
+function NZVD:GetTooltipWidth(string)
+    if (string) then
+        local widthMultiply = 0
+        if (string.len(string) <= 30) then
+            widthMultiply = 5.5
+        elseif (string.len(string) > 30 and string.len(string) <= 66) then
+            widthMultiply = 4.7
+        else
+            widthMultiply = 4.4
+        end
+        return string.len(string)*widthMultiply
+    end
+    return 0
+end
+
+function NZVD:CheckPlayerInOwnRaid(playerName)
+    for i = 1, GetNumRaidMembers() do
+        if (UnitName("raid"..i) == playerName) then
+            return true
+        end
+    end
 end

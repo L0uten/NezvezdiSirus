@@ -191,10 +191,13 @@ function NZVD:InitNewSettings()
                                                                             NZVD_DB.Profiles[UnitName("player")].SetOldVersion = not NZVD_DB.Profiles[UnitName("player")].SetOldVersion
                                                                             NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].SetOldVersion)
                                                                             if (NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
-                                                                                NZVD:Notify("Вы включили функцию отката, напишите\n /reload чтоб она заработала.")
+                                                                                NZVD:Notify("Вы включили функцию отката, напишите\n/reload чтоб она заработала.")
                                                                                 NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy = false
                                                                                 NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy)
                                                                                 NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2.CheckButton:Disable()
+                                                                                if (NZVD.NumberAuras) then
+                                                                                    NZVD:HideNumberAuras()
+                                                                                end
                                                                             else
                                                                                 NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2.CheckButton:Enable()
                                                                             end
@@ -211,17 +214,7 @@ function NZVD:InitNewSettings()
                                                                         function()
                                                                             NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy = not NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy
                                                                             NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy)
-                                                                            if (NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy) then
-                                                                                local stime = GetTime()
-                                                                                NZVD.RaidUpdate:SetScript("OnUpdate", function()
-                                                                                    if (GetTime() >= stime+8 and not UnitAffectingCombat("player")) then
-                                                                                        NZVD:Update(1)
-                                                                                        stime = GetTime()
-                                                                                    end
-                                                                                end)
-                                                                            else
-                                                                                NZVD.RaidUpdate:SetScript("OnUpdate", nil)
-                                                                            end
+                                                                            NZVD:SetIncreaseAccurasy()
                                                                         end)
 
     if (NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then

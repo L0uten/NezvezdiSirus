@@ -12,7 +12,7 @@ _G[AddOnName] = Engine
 local dropdownlists = {}
 local streams = {}
 
-Engine[1].LibVersion = "1.2"
+Engine[1].LibVersion = "1.2a"
 
 
 
@@ -1178,6 +1178,7 @@ Engine[1].InitAddon = function(s, fileName, name, version)
                                                                         end
                                                                         Engine[2].SettingsWindow.MainPanel:Show()
                                                                         Engine[2].SettingsWindow.MainPanel.Windows[i]:Show()
+                                                                        Engine[2].SettingsWindow.MainPanel.Animation:SetAlpha(.2)
                                                                     end)
         Engine[2].SettingsWindow.MenuBar.Buttons[i]:SetTextToFrame("CENTER", Engine[2].SettingsWindow.MenuBar.Buttons[i], "CENTER", 0, 1, true, Engine[2].SettingsWindow.MenuBar.ButtonFontHeight, buttonText)
         if (Engine[2].SettingsWindow:GetStyle() == "white") then

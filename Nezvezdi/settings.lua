@@ -186,7 +186,7 @@ function NZVD:InitNewSettings()
     NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1:InitNewFrame(1,1,
                                                                 "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi2], "TOPLEFT", 35, -20-(NZVD.SettingsWindow.MainPanel.Windows[wi1].Title:GetHeight()),
                                                                 1,0,0,0)
-    NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1:InitNewCheckButton(30, NZVD_DB.Profiles[UnitName("player")].SetOldVersion, "Безопасный режим (отключаются новые функции - убираются баги)", true, 10,
+    NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1:InitNewCheckButton(20, NZVD_DB.Profiles[UnitName("player")].SetOldVersion, "Безопасный режим (отключаются новые функции - убираются баги)", true, 10,
                                                                         function()
                                                                             NZVD_DB.Profiles[UnitName("player")].SetOldVersion = not NZVD_DB.Profiles[UnitName("player")].SetOldVersion
                                                                             NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].SetOldVersion)
@@ -210,7 +210,7 @@ function NZVD:InitNewSettings()
     NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2:InitNewFrame(1,1,
                                                                 "TOPLEFT", NZVD.SettingsWindow.MainPanel.Windows[wi2].CB1, "TOPLEFT", 0, -50,
                                                                 1,0,0,0)
-    NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2:InitNewCheckButton(30, NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy, "[БЕТА] Повысить точность (возможны фризы, понижение производительности, баги)", true, 9,
+    NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2:InitNewCheckButton(20, NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy, "[БЕТА] Повысить точность (возможны фризы, понижение производительности, баги)", true, 9,
                                                                         function()
                                                                             NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy = not NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy
                                                                             NZVD.SettingsWindow.MainPanel.Windows[wi2].CB2.CheckButton:SetChecked(NZVD_DB.Profiles[UnitName("player")].IncreaseAccurasy)

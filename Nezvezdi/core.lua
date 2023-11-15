@@ -93,11 +93,9 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
             -- OUT
             if (arg1 == "nzvd_out_info_about_unknows_players") then
                 if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
-                    print(arg2)
                     if (select(4,strsplit(" ", arg2))) then
                         if (not NZVD:IsReceivedVersionIsLowest(select(4,strsplit(" ", arg2)))) then
                             if (select(4,strsplit(" ", arg2)) == NZVD:GetHigherVersion(NZVD_DB.Profiles[UnitName("player")].ActualVersion, select(4,strsplit(" ", arg2)))) then
-                                print("меняем")
                                 print(NZVD:GetHigherVersion(NZVD_DB.Profiles[UnitName("player")].ActualVersion, select(4,strsplit(" ", arg2))))
                                 NZVD_DB.Profiles[UnitName("player")].ActualVersion = select(4,strsplit(" ", arg2))
                             end

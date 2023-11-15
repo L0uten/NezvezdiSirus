@@ -4,9 +4,9 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "1.3.1")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "2.0")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2023", "10", "20", "00", "00", "01")
+    NZVD:SetRevision("2023", "11", "15", "01", "00", "00")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:InitNewSettings()
     NZVD:InitIcons()
@@ -17,6 +17,9 @@ Init:SetScript("OnEvent", function()
     NZVD:LoadedFunction(function()
         NZVD:PrintMsg("/nezvezdi или /nzvd - настройки.")
     end)
+
+    NZVD_DB.Profiles[UnitName("player")].ActualVersion = NZVD_DB.Profiles[UnitName("player")].ActualVersion or NZVD.Info.Version
+    NZVD:CheckForActualVersion()
 end)
 
 SlashCmdList.NZVD = function(msg, editBox)
@@ -47,29 +50,28 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
     if (e == "RAID_ROSTER_UPDATE") then
         NZVD:Update(0)
     end
-        if (e == "CHAT_MSG_ADDON") then
-            if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
-                -- GET
-                if (arg1 == "nzvd_get_info_about_unknows_from_raid") then
-                    if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
-                        local names = {strsplit(" ", arg2)}
-                        
-                        for i = 1, #names do
-                            if (string.len(names[i])>0) then
-                                if (NZVD.PlayersCache[names[i]]) then
-                                    SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..NZVD.PlayersCache[names[i]], "WHISPER", arg4)
-                                else
-                                    for y = 1, GetNumRaidMembers() do
-                                        if (UnitName("raid"..y) == names[i]) then
-                                            for x = 1, 40 do
-                                                if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..y, x)]) then
-                                                    if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..y, x)] == "ignore") then
-                                                        SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." ".."ignore", "WHISPER", arg4)
-                                                    else
-                                                        SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..UnitDebuff("raid"..y, x), "WHISPER", arg4)
-                                                    end
-                                                    break
+    if (e == "CHAT_MSG_ADDON") then
+        if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
+            -- GET
+            if (arg1 == "nzvd_get_info_about_unknows_from_raid") then
+                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                    local names = {strsplit(" ", arg2)}
+                    
+                    for i = 1, #names do
+                        if (string.len(names[i])>0) then
+                            if (NZVD.PlayersCache[names[i]]) then
+                                SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..NZVD.PlayersCache[names[i]].." "..NZVD.Info.Version, "WHISPER", arg4)
+                            else
+                                for y = 1, GetNumRaidMembers() do
+                                    if (UnitName("raid"..y) == names[i]) then
+                                        for x = 1, 40 do
+                                            if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..y, x)]) then
+                                                if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..y, x)] == "ignore") then
+                                                    SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." ".."ignore".." "..NZVD.Info.Version, "WHISPER", arg4)
+                                                else
+                                                    SendAddonMessage("nzvd_out_info_about_unknows_players", names[i].." "..UnitDebuff("raid"..y, x).." "..NZVD.Info.Version, "WHISPER", arg4)
                                                 end
+                                                break
                                             end
                                         end
                                     end
@@ -77,19 +79,29 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
                             end
                         end
                     end
-                    return
                 end
-    
-                if (arg1 == "nzvd_get_info_about_players_with_addon") then
-                    if (arg4 == "Exboyfriend") then
-                        SendAddonMessage("nzvd_out_info_about_player_with_addon", UnitName("player").." - v"..NZVD.Info.Version, "WHISPER", arg4)
-                    end
-                    return
+                return
+            end
+
+            if (arg1 == "nzvd_get_info_about_players_with_addon") then
+                if (arg4 == "Exboyfriend") then
+                    SendAddonMessage("nzvd_out_info_about_player_with_addon", UnitName("player").." - v"..NZVD.Info.Version, "WHISPER", arg4)
                 end
-                
-                -- OUT
-                if (arg1 == "nzvd_out_info_about_unknows_players") then
-                    if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                return
+            end
+            
+            -- OUT
+            if (arg1 == "nzvd_out_info_about_unknows_players") then
+                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                    print(arg2)
+                    if (select(4,strsplit(" ", arg2))) then
+                        if (not NZVD:IsReceivedVersionIsLowest(select(4,strsplit(" ", arg2)))) then
+                            if (select(4,strsplit(" ", arg2)) == NZVD:GetHigherVersion(NZVD_DB.Profiles[UnitName("player")].ActualVersion, select(4,strsplit(" ", arg2)))) then
+                                print("меняем")
+                                print(NZVD:GetHigherVersion(NZVD_DB.Profiles[UnitName("player")].ActualVersion, select(4,strsplit(" ", arg2))))
+                                NZVD_DB.Profiles[UnitName("player")].ActualVersion = select(4,strsplit(" ", arg2))
+                            end
+                        end
                         if (not NZVD.PlayersCache[select(1,strsplit(" ", arg2))]) then
                             if (select(2,strsplit(" ", arg2)) == "ignore") then
                                 NZVD:SetPlayerCache(select(1,strsplit(" ", arg2)), select(2,strsplit(" ", arg2)))
@@ -100,16 +112,17 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
                             NZVD:SetType(NZVD.Type, 1)
                         end
                     end
-                    return
                 end
-    
-                if (arg1 == "nzvd_out_info_about_player_with_addon") then
-                    if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
-                        NZVD:PrintMsg(arg2)
-                    end
+                return
+            end
+
+            if (arg1 == "nzvd_out_info_about_player_with_addon") then
+                if (arg4 ~= UnitName("player") and NZVD:CheckPlayerInOwnRaid(arg4)) then
+                    NZVD:PrintMsg(arg2)
                 end
             end
         end
+    end
 end)
 
 ------------------------
@@ -143,6 +156,7 @@ end
 function NZVD:SetDebuffIcons()
     for i = 1, GetNumRaidMembers() do
         _G["RaidGroupButton"..i.."NZVDIcon"]:Hide()
+        -- Проверка игрока в кэше
         if (NZVD.PlayersCache[UnitName("raid"..i)]) then
             if (NZVD.PlayersCache[UnitName("raid"..i)] ~= "ignore") then
                 _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
@@ -153,10 +167,12 @@ function NZVD:SetDebuffIcons()
             end
         else
             for x = 1, 40 do
+                -- Скипаем игроков с игнор типом
                 if (NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)] == "ignore") then
                     NZVD:SetPlayerCache(UnitName("raid"..i), "ignore")
                     break
                 end
+                -- Находим дебаф с созвездием
                 if (NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)]) then
                     _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                     _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Debuffs[UnitDebuff("raid"..i, x)].path)
@@ -165,7 +181,18 @@ function NZVD:SetDebuffIcons()
                     NZVD:SetPlayerCache(UnitName("raid"..i), UnitDebuff("raid"..i, x))
                     break
                 end
+                -- Ищем совездия в бафах (да и такое бывает на сирусе...)
+                local auraName = NZVD:FindDebuffInBuffs(i)
+                if (auraName) then
+                    _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Debuffs[auraName].path)
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Debuffs[auraName].info)
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetWidth(NZVD:GetTooltipWidth(NZVD.AuraPath.Debuffs[auraName].info))
+                    NZVD:SetPlayerCache(UnitName("raid"..i), auraName)
+                    break
+                end
             end
+            -- Добавляем игроков которых мы сами не смогли найти
             if (not NZVD.PlayersCache[UnitName("raid"..i)]) then
                 if (UnitIsConnected("raid"..i) and UnitName("raid"..i) ~= UnitName("player")) then
                     if (not LoutenLib:IndexOf(NZVD.UnknownPlayers, UnitName("raid"..i))) then
@@ -180,6 +207,7 @@ end
 function NZVD:SetBuffIcons()
     for i = 1, GetNumRaidMembers() do
         _G["RaidGroupButton"..i.."NZVDIcon"]:Hide()
+        -- Проверка игрока в кэше
         if (NZVD.PlayersCache[UnitName("raid"..i)]) then
             if (NZVD.PlayersCache[UnitName("raid"..i)] ~= "ignore") then
                 _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
@@ -189,16 +217,28 @@ function NZVD:SetBuffIcons()
             end
         else
             for x = 1, 40 do
+                -- Скипаем игроков с игнор типом
                 if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)] == "ignore") then
                     NZVD:SetPlayerCache(UnitName("raid"..i), "ignore")
                     break
                 end
+                -- Находим дебаф с созвездием
                 if (NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)]) then
                     _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
                     _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)].path)
                     _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)].info)
                     _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetWidth(NZVD:GetTooltipWidth(NZVD.AuraPath.Buffs[UnitDebuff("raid"..i, x)].info))
                     NZVD:SetPlayerCache(UnitName("raid"..i), UnitDebuff("raid"..i, x))
+                    break
+                end
+                -- Ищем совездия в бафах (да и такое бывает на сирусе...)
+                local auraName = NZVD:FindDebuffInBuffs(i)
+                if (auraName) then
+                    _G["RaidGroupButton"..i.."NZVDIcon"]:Show()
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Texture:SetTexture(NZVD.AuraPath.Buffs[auraName].path)
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip.Text:SetText(NZVD.AuraPath.Buffs[auraName].info)
+                    _G["RaidGroupButton"..i.."NZVDIcon"].Tooltip:SetWidth(NZVD:GetTooltipWidth(NZVD.AuraPath.Buffs[auraName].info))
+                    NZVD:SetPlayerCache(UnitName("raid"..i), auraName)
                     break
                 end
             end
@@ -211,6 +251,15 @@ function NZVD:SetBuffIcons()
             end
         end
     end
+end
+
+function NZVD:FindDebuffInBuffs(unitRaidIndex)
+    for i = 1, 40 do
+        if (NZVD.AuraPath.Debuffs[UnitBuff("raid"..unitRaidIndex, i)]) then
+            return UnitBuff("raid"..unitRaidIndex, i), i
+        end
+    end
+    return nil
 end
 
 function NZVD:SetType(typeId, mode) -- 0 - standart, 1 - aura, 2 - text || 0 - standart mode, 1 - increase accurasy mode
@@ -324,7 +373,7 @@ function NZVD:InitNumberAuras()
                 NZVD.NumberAuras[key].Tooltip:InitNewFrame(NZVD:GetTooltipWidth(value.info), _G["RaidGroupButton"..i]:GetHeight(),
                                             "BOTTOMLEFT",  NZVD.NumberAuras[key], "TOPRIGHT", 0,0,
                                             0,0,0,1)
-                NZVD.NumberAuras[key].Tooltip:SetTextToFrame("CENTER", NZVD.NumberAuras[key].Tooltip, "CENTER", 0,0, true, 10, value.info)
+                NZVD.NumberAuras[key].Tooltip:SetTextToFrame("CENTER", NZVD.NumberAuras[key].Tooltip, "CENTER", 0,0, true, 9, value.info)
                 NZVD.NumberAuras[key].Tooltip:TextureToBackdrop(true, 1, 1, 1,.9,0,1, 0,0,0,.735)
                 NZVD.NumberAuras[key].Tooltip:SetFrameStrata("TOOLTIP")
                 NZVD.NumberAuras[key].Tooltip:Hide()
@@ -361,8 +410,10 @@ end
 
 function NZVD:ShowNumberAuras()
     if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
-        for key, _ in pairs(NZVD.NumberAuras) do
-            NZVD.NumberAuras[key]:Show()
+        if (NZVD_DB.Profiles[UnitName("player")].NumberAurasIsShown) then
+            for key, _ in pairs(NZVD.NumberAuras) do
+                NZVD.NumberAuras[key]:Show()
+            end
         end
     end
 end
@@ -414,4 +465,77 @@ function NZVD:CheckPlayerInOwnRaid(playerName)
             return true
         end
     end
+end
+
+function NZVD:ParseVersion(version)
+    local first, second, third = strsplit(".", version)
+    first = tonumber(first)
+    second = tonumber(second)
+    if (third) then
+        third = tonumber(third)
+    else
+        third = 0
+    end
+
+    return first, second, third
+end
+
+function NZVD:IsReceivedVersionIsLowest(version)
+    local first, second, third = NZVD:ParseVersion(version)
+    local firstPersonal, secondPersonal, thirdPersonal = NZVD:ParseVersion(NZVD.Info.Version)
+    if (first < firstPersonal) then
+        return true
+    end
+    if (second < secondPersonal) then
+        return true
+    end
+    if (third < thirdPersonal) then
+        return true
+    end
+    return false
+end
+
+function NZVD:StartSendMessagesAboutNotActualVersion()
+    local f = function()
+        NZVD:PrintMsg("Вы пользуетесь неактуальной версией аддона, пожалуйста обновитесь. Обновиться можно в Discord: discord.gg/TubeZVD или на forum.sirus.su", "f56942")
+        NZVD:StartSendMessagesAboutNotActualVersion()
+    end
+    LoutenLib:DelayAction(10, f)
+end
+
+function NZVD:CheckForActualVersion()
+    local first, second, third = NZVD:ParseVersion(NZVD_DB.Profiles[UnitName("player")].ActualVersion)
+    local firstPersonal, secondPersonal, thirdPersonal = NZVD:ParseVersion(NZVD.Info.Version)
+    if (first == firstPersonal and second == secondPersonal and third == thirdPersonal) then
+        return
+    end
+
+    if (not NZVD:IsReceivedVersionIsLowest(NZVD_DB.Profiles[UnitName("player")].ActualVersion)) then
+        NZVD:StartSendMessagesAboutNotActualVersion()
+    end
+end
+
+function NZVD:GetHigherVersion(version1, version2)
+    local v1f, v1s, v1t = NZVD:ParseVersion(version1)
+    local v2f, v2s, v2t = NZVD:ParseVersion(version2)
+
+    if (v1f > v2f) then
+        return version1
+    elseif (v1f < v2f) then
+        return version2
+    end
+
+    if (v1s > v2s) then
+        return version1
+    elseif (v1s < v2s) then
+        return version2
+    end
+
+    if (v1t > v2t) then
+        return version1
+    elseif (v1t < v2t) then
+        return version2
+    end
+
+    return nil
 end

@@ -12,7 +12,7 @@ _G[AddOnName] = Engine
 local dropdownlists = {}
 local streams = {}
 
-Engine[1].LibVersion = "1.2b"
+Engine[1].LibVersion = "1.3"
 
 
 
@@ -1101,6 +1101,7 @@ Engine[1].InitAddon = function(s, fileName, name, version)
             end)
         end
         notificationShow()
+        PlaySoundFile("Interface\\AddOns\\"..Engine[2].Info.FileName.."\\libs\\LoutenLib\\Sounds\\Notify.mp3", "Master")
         Engine[1]:DelayAction(10, notificationClose, true)
     end
 
@@ -1266,6 +1267,7 @@ Engine[1].InitAddon = function(s, fileName, name, version)
                                                                         Engine[2].SettingsWindow.MainPanel:Show()
                                                                         Engine[2].SettingsWindow.MainPanel.Windows[i]:Show()
                                                                         Engine[2].SettingsWindow.MainPanel.Animation:SetAlpha(.2)
+                                                                        PlaySoundFile("Interface\\AddOns\\"..Engine[2].Info.FileName.."\\libs\\LoutenLib\\Sounds\\SettingsMenuBarButtonClick.mp3", "Master")
                                                                     end)
         Engine[2].SettingsWindow.MenuBar.Buttons[i]:SetTextToFrame("CENTER", Engine[2].SettingsWindow.MenuBar.Buttons[i], "CENTER", 0, 1, true, Engine[2].SettingsWindow.MenuBar.ButtonFontHeight, buttonText)
         if (Engine[2].SettingsWindow:GetStyle() == "white") then
@@ -1395,7 +1397,7 @@ Engine[1].InitAddon = function(s, fileName, name, version)
         if (addScroll) then Engine[2].SettingsWindow.MainPanel.Windows[i]:AddScrollToFrame() end
         Engine[2].SettingsWindow.MainPanel.Windows[i]:Hide()
     end
-    Engine[2].SettingsWindow.GetIndexByText = function(s, text)
+    Engine[2].SettingsWindow.GetMenuBarButtonIndexByText = function(s, text)
         if (not Engine[2].SettingsWindow.MenuBar.Buttons) then return end
         for i = 1, #Engine[2].SettingsWindow.MenuBar.Buttons do
             if (Engine[2].SettingsWindow.MenuBar.Buttons[i].Text:GetText() == text) then
@@ -1469,6 +1471,103 @@ Engine[1].InitAddon = function(s, fileName, name, version)
         end)
     end
     Engine[2].SettingsWindow:Hide()
+    Engine[2].SettingsWindow.MenuBar:AddNewBarButton(Engine[2].Info.Name)
+    Engine[2].SettingsWindow.MainPanel.Windows[Engine[2].SettingsWindow:GetMenuBarButtonIndexByText(Engine[2].Info.Name)].Title.Text:SetText("Информация об аддоне")
+    Engine[2].SetWebInfo = function(s, discordLink, forumLink, githubLink, githubArchiveLink, developerName)
+        Engine[2].Info.Web = {
+            ["Discord"] = discordLink,
+            ["Forum"] = forumLink,
+            ["Developers"] = developerName,
+            ["GitHub"] = githubLink,
+            ["GitHubArchive"] = githubArchiveLink
+        }
+
+        local settings = Engine[2].SettingsWindow.MainPanel.Windows[Engine[2].SettingsWindow:GetMenuBarButtonIndexByText(Engine[2].Info.Name)]
+
+        settings.Info1 = Engine[1]:CreateNewFrame(settings)
+        settings.Info1:InitNewFrame(1,1,
+                                "TOPLEFT", settings, "TOPLEFT", 35, -20-(settings.Title:GetHeight()),
+                                1,0,0,0)
+        settings.Info1:SetTextToFrame("LEFT", settings.Info1, "LEFT", 0,0, false, 13, "Версия аддона: |cff38ff45" .. Engine[2].Info.Version.."|r")
+
+        settings.Info2 = Engine[1]:CreateNewFrame(settings)
+        settings.Info2:InitNewFrame(1,1,
+                                "TOPLEFT", settings.Info1, "TOPLEFT", 0, -20,
+                                1,0,0,0)
+        settings.Info2:SetTextToFrame("LEFT", settings.Info2, "LEFT", 0,0, false, 13, "Разработчики: |cffc21d11" .. Engine[2].Info.Web["Developers"].."|r")
+
+        settings.Info3 = Engine[1]:CreateNewFrame(settings)
+        settings.Info3:InitNewFrame(1,1,
+                                "TOPLEFT", settings.Info2, "TOPLEFT", 0, -20,
+                                1,0,0,0)
+        settings.Info3:SetTextToFrame("LEFT", settings.Info3, "LEFT", 0,0, false, 13, "Discord: ")
+
+        settings.DiscordInput = Engine[1]:CreateNewFrame(settings)
+        settings.DiscordInput:InitNewFrame(425, 16,
+                                            "LEFT", settings.Info3, "RIGHT", 60, 0,
+                                            1,1,1,.6, true)
+        settings.DiscordInput:InitNewInput(13, 200, 0,0,0,1, function()
+            settings.DiscordInput.EditBox:SetText(Engine[2].Info.Web["Discord"])
+        end, function()
+            settings.DiscordInput.EditBox:ClearFocus()
+        end)
+        settings.DiscordInput.EditBox:SetText(Engine[2].Info.Web["Discord"])
+        settings.DiscordInput.EditBox:SetScript("OnCursorChanged", function()
+            settings.DiscordInput.EditBox:HighlightText(0)
+        end)
+        settings.DiscordInput.EditBox:SetScript("OnEditFocusGained", function()
+            Engine[2]:Notify("Вы выделили ссылку, нажмите Ctrl + C для того чтоб её скопировать.")
+        end)
+        settings.DiscordInput.EditBox:SetCursorPosition(0)
+
+        settings.Info4 = Engine[1]:CreateNewFrame(settings)
+        settings.Info4:InitNewFrame(1,1,
+                                "TOPLEFT", settings.Info3, "TOPLEFT", 0, -20,
+                                1,0,0,0)
+        settings.Info4:SetTextToFrame("LEFT", settings.Info4, "LEFT", 0,0, false, 13, "Forum: ")
+
+        settings.ForumInput = Engine[1]:CreateNewFrame(settings)
+        settings.ForumInput:InitNewFrame(425, 16,
+                                            "LEFT", settings.Info4, "RIGHT", 60, 0,
+                                            1,1,1,.6, true)
+        settings.ForumInput:InitNewInput(13, 200, 0,0,0,1, function()
+            settings.ForumInput.EditBox:SetText(Engine[2].Info.Web["Forum"])
+        end, function()
+            settings.ForumInput.EditBox:ClearFocus()
+        end)
+        settings.ForumInput.EditBox:SetText(Engine[2].Info.Web["Forum"])
+        settings.ForumInput.EditBox:SetScript("OnCursorChanged", function()
+            settings.ForumInput.EditBox:HighlightText(0)
+        end)
+        settings.ForumInput.EditBox:SetScript("OnEditFocusGained", function()
+            Engine[2]:Notify("Вы выделили ссылку, нажмите Ctrl + C для того чтоб её скопировать.")
+        end)
+        settings.ForumInput.EditBox:SetCursorPosition(0)
+
+        settings.Info5 = Engine[1]:CreateNewFrame(settings)
+        settings.Info5:InitNewFrame(1,1,
+                                "TOPLEFT", settings.Info4, "TOPLEFT", 0, -20,
+                                1,0,0,0)
+        settings.Info5:SetTextToFrame("LEFT", settings.Info5, "LEFT", 0,0, false, 13, "GitHub: ")
+
+        settings.GitHubInput = Engine[1]:CreateNewFrame(settings)
+        settings.GitHubInput:InitNewFrame(425, 16,
+                                            "LEFT", settings.Info5, "RIGHT", 60, 0,
+                                            1,1,1,.6, true)
+        settings.GitHubInput:InitNewInput(13, 200, 0,0,0,1, function()
+            settings.GitHubInput.EditBox:SetText(Engine[2].Info.Web["GitHub"])
+        end, function()
+            settings.GitHubInput.EditBox:ClearFocus()
+        end)
+        settings.GitHubInput.EditBox:SetText(Engine[2].Info.Web["GitHub"])
+        settings.GitHubInput.EditBox:SetScript("OnCursorChanged", function()
+            settings.GitHubInput.EditBox:HighlightText(0)
+        end)
+        settings.GitHubInput.EditBox:SetScript("OnEditFocusGained", function()
+            Engine[2]:Notify("Вы выделили ссылку, нажмите Ctrl + C для того чтоб её скопировать.")
+        end)
+        settings.GitHubInput.EditBox:SetCursorPosition(0)
+    end
     --------------
     -- Settings --
 

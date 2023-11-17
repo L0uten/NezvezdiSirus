@@ -11,8 +11,8 @@ function NZVD:InitNewSettings()
     NZVD.SettingsWindow.MenuBar:AddNewBarButton("Внешний вид")
     NZVD.SettingsWindow.MenuBar:AddNewBarButton("Производительность")
 
-    local settings1 = NZVD.SettingsWindow.MainPanel.Windows[NZVD.SettingsWindow:GetIndexByText("Внешний вид")]
-    local settings2 = NZVD.SettingsWindow.MainPanel.Windows[NZVD.SettingsWindow:GetIndexByText("Производительность")]
+    local settings1 = NZVD.SettingsWindow.MainPanel.Windows[NZVD.SettingsWindow:GetMenuBarButtonIndexByText("Внешний вид")]
+    local settings2 = NZVD.SettingsWindow.MainPanel.Windows[NZVD.SettingsWindow:GetMenuBarButtonIndexByText("Производительность")]
 
 
 

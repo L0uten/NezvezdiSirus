@@ -4,9 +4,14 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "2.0")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "2.1")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2023", "11", "15", "01", "00", "00")
+    NZVD:SetRevision("2023", "11", "17", "00", "01", "00")
+    NZVD:SetWebInfo("https://discord.gg/TubeZVD",
+                    "https://forum.sirus.su/threads/nezvezdi-raspredeli-svoi-sozvezdija.344831/",
+                    "https://github.com/L0uten/NezvezdiSirus",
+                    "https://github.com/L0uten/NezvezdiSirus/archive/refs/heads/main.zip",
+                    "Exboyfriend aka Louten")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:InitNewSettings()
     NZVD:InitIcons()
@@ -96,7 +101,6 @@ NZVD.RaidUpdate:SetScript("OnEvent", function(s, e, arg1, arg2, arg3, arg4, arg5
                     if (select(4,strsplit(" ", arg2))) then
                         if (not NZVD:IsReceivedVersionIsLowest(select(4,strsplit(" ", arg2)))) then
                             if (select(4,strsplit(" ", arg2)) == NZVD:GetHigherVersion(NZVD_DB.Profiles[UnitName("player")].ActualVersion, select(4,strsplit(" ", arg2)))) then
-                                print(NZVD:GetHigherVersion(NZVD_DB.Profiles[UnitName("player")].ActualVersion, select(4,strsplit(" ", arg2))))
                                 NZVD_DB.Profiles[UnitName("player")].ActualVersion = select(4,strsplit(" ", arg2))
                             end
                         end
@@ -352,12 +356,13 @@ end
 function NZVD:InitNumberAuras()
     if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
         local i = 0
+        NZVD.NumberAurasLayer = LoutenLib:CreateNewFrame(RaidFrame)
         NZVD.NumberAuras = {}
         for key, value in pairs(NZVD.AuraPath.Buffs) do
             if (value ~= "ignore") then
                 i = i + 1
     
-                NZVD.NumberAuras[key] = LoutenLib:CreateNewFrame(FriendsFrame)
+                NZVD.NumberAuras[key] = LoutenLib:CreateNewFrame(NZVD.NumberAurasLayer)
                 NZVD.NumberAuras[key]:InitNewFrame(20, 20,
                                                 "BOTTOM", FriendsFrame, "TOPLEFT", i*21,0,
                                                 1,1,1,1, true)
@@ -384,18 +389,13 @@ function NZVD:InitNumberAuras()
                 NZVD.NumberAuras[key]:Hide()
             end
         end
-        local raidframeonshowfunc = RaidFrame:GetScript("OnShow")
-        local raidframeonhidefunc = RaidFrame:GetScript("OnHide")
-    
-        RaidFrame:SetScript("OnShow", function()
+        NZVD.NumberAurasLayer:SetScript("OnShow", function()
             if (UnitInRaid("player")) then
                 NZVD:ShowNumberAuras()
             end
-            raidframeonshowfunc()
         end)
-        RaidFrame:SetScript("OnHide", function()
+        NZVD.NumberAurasLayer:SetScript("OnHide", function()
             NZVD:HideNumberAuras()
-            raidframeonhidefunc()
         end)
     end
 end

@@ -4,9 +4,9 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "2.1")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "2.1.1")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2023", "11", "17", "00", "01", "00")
+    NZVD:SetRevision("2024", "02", "13", "00", "01", "00")
     NZVD:SetWebInfo("https://discord.gg/TubeZVD",
                     "https://forum.sirus.su/threads/nezvezdi-raspredeli-svoi-sozvezdija.344831/",
                     "https://github.com/L0uten/NezvezdiSirus",

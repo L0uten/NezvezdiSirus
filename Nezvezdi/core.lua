@@ -4,13 +4,13 @@ local LoutenLib, NZVD = unpack(Engine)
 local Init = CreateFrame("Frame")
 Init:RegisterEvent("PLAYER_LOGIN")
 Init:SetScript("OnEvent", function()
-    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "2.1.1")
+    LoutenLib:InitAddon("Nezvezdi", "Nezvezdi", "2.2")
     NZVD:SetChatPrefixColor("ffff6b")
-    NZVD:SetRevision("2024", "02", "13", "00", "01", "00")
+    NZVD:SetRevision("2024", "02", "18", "00", "01", "00")
     NZVD:SetWebInfo("https://discord.gg/TubeZVD",
                     "https://forum.sirus.su/threads/nezvezdi-raspredeli-svoi-sozvezdija.344831/",
                     "https://github.com/L0uten/NezvezdiSirus",
-                    "https://github.com/L0uten/NezvezdiSirus/archive/refs/heads/main.zip",
+                    "-",
                     "Exboyfriend aka Louten")
     NZVD_DB = LoutenLib:InitDataStorage(NZVD_DB)
     NZVD:InitNewSettings()
@@ -19,6 +19,7 @@ Init:SetScript("OnEvent", function()
     NZVD:SetIncreaseAccurasy()
     NZVD:InitNumberAuras()
     NZVD:UpdateNumberAuras()
+    NZVD:InitRefreshBT()
     NZVD:LoadedFunction(function()
         NZVD:PrintMsg("/nezvezdi или /nzvd - настройки.")
     end)
@@ -153,6 +154,52 @@ function NZVD:InitIcons()
     end
     NZVD.RaidUpdate:RegisterEvent("RAID_ROSTER_UPDATE")
     NZVD.RaidUpdate:RegisterEvent("CHAT_MSG_ADDON")
+end
+
+function NZVD:InitRefreshBT()
+    NZVD.RefreshBT = LoutenLib:CreateNewFrame(NZVD.NumberAurasLayer)
+    local bt = NZVD.RefreshBT
+    local isCD = false
+    local tooltipText = "Обновить (найти новые) ауры"
+
+    bt:InitNewFrame2(14, 14,
+                    "TOPLEFT", RaidFrame, "TOPLEFT", 13, -10,
+                    0,0,0,0, true)
+    bt:SetScript("OnMouseUp", function()
+        if (not isCD) then
+            isCD = true
+            NZVD:Update(0)
+            bt.Tooltip:SetWidth(NZVD:GetTooltipWidth("[неактивно] "..tooltipText))
+            bt.Tooltip.Text:SetText("[неактивно] "..tooltipText)
+            bt.Texture:SetVertexColor(LoutenLib:RGBToWowColors(105),
+                                        LoutenLib:RGBToWowColors(31),
+                                        LoutenLib:RGBToWowColors(31))
+            LoutenLib:DelayAction(2, function()
+                isCD = false
+                bt.Texture:SetVertexColor(1,1,1)
+                bt.Tooltip:SetWidth(NZVD:GetTooltipWidth(tooltipText))
+                bt.Tooltip.Text:SetText(tooltipText)
+            end)
+        end
+    end)
+    bt.Texture:SetTexture("Interface\\AddOns\\"..NZVD.Info.FileName.."\\textures\\refresh.tga")
+    bt.Texture:SetVertexColor(1,1,1)
+
+    bt.Tooltip = LoutenLib:CreateNewFrame(bt)
+    
+    bt.Tooltip:InitNewFrame(NZVD:GetTooltipWidth(tooltipText), _G["RaidGroupButton"..1]:GetHeight(),
+                                "BOTTOMLEFT",  bt, "TOPRIGHT", 0,0,
+                                0,0,0,1)
+    bt.Tooltip:SetTextToFrame("CENTER", bt.Tooltip, "CENTER", 0,0, true, 9, tooltipText)
+    bt.Tooltip:TextureToBackdrop(true, 1, 1, 1,1,1,1, 0,0,0,.735)
+    bt.Tooltip:SetFrameStrata("TOOLTIP")
+    bt.Tooltip:Hide()
+    bt:SetScript("OnEnter", function()
+        bt.Tooltip:Show()
+    end)
+    bt:SetScript("OnLeave", function()
+        bt.Tooltip:Hide()
+    end)
 end
 
 function NZVD:SetDebuffIcons()
@@ -361,7 +408,6 @@ function NZVD:InitNumberAuras()
         for key, value in pairs(NZVD.AuraPath.Buffs) do
             if (value ~= "ignore") then
                 i = i + 1
-    
                 NZVD.NumberAuras[key] = LoutenLib:CreateNewFrame(NZVD.NumberAurasLayer)
                 NZVD.NumberAuras[key]:InitNewFrame(20, 20,
                                                 "BOTTOM", FriendsFrame, "TOPLEFT", i*21,0,
@@ -392,10 +438,12 @@ function NZVD:InitNumberAuras()
         NZVD.NumberAurasLayer:SetScript("OnShow", function()
             if (UnitInRaid("player")) then
                 NZVD:ShowNumberAuras()
+                NZVD.RefreshBT:Show()
             end
         end)
         NZVD.NumberAurasLayer:SetScript("OnHide", function()
             NZVD:HideNumberAuras()
+            NZVD.RefreshBT:Hide()
         end)
     end
 end
@@ -408,10 +456,8 @@ end
 
 function NZVD:ShowNumberAuras()
     if (not NZVD_DB.Profiles[UnitName("player")].SetOldVersion) then
-        if (NZVD_DB.Profiles[UnitName("player")].NumberAurasIsShown) then
-            for key, _ in pairs(NZVD.NumberAuras) do
-                NZVD.NumberAuras[key]:Show()
-            end
+        for key, _ in pairs(NZVD.NumberAuras) do
+            NZVD.NumberAuras[key]:Show()
         end
     end
 end

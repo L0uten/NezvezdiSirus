@@ -4,6 +4,8 @@
 ## Author: Exboyfriend
 ## Version: 2.1.1
 ## SavedVariables: NZVD_DB
+## X-Sirus-Update: https://github.com/L0uten/NezvezdiSirus/tree/main/Nezvezdi
+## X-Sirus-Category: 5
 
 libs\LoutenLib\LoutenLib.lua
 spell_icons.lua

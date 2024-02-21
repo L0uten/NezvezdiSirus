@@ -544,7 +544,7 @@ function NZVD:StartSendMessagesAboutNotActualVersion()
         NZVD:PrintMsg("Вы пользуетесь неактуальной версией аддона, пожалуйста обновитесь. Обновиться можно в Discord: discord.gg/TubeZVD или на forum.sirus.su", "f56942")
         NZVD:StartSendMessagesAboutNotActualVersion()
     end
-    LoutenLib:DelayAction(10, f)
+    LoutenLib:DelayAction(1800, f)
 end
 
 function NZVD:CheckForActualVersion()
